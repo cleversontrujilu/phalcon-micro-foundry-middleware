@@ -265,7 +265,7 @@ class Provision
 
     private function setRules()
     {
-        $configs     = require APP_PATH . "/config/RulesApi.php";
+        $configs     = require APP_PATH . "/config/rulesApi.php";
 
         $this->RulesPattern = $configs->get($this->Pattern);
         if ($this->RulesPattern) {
