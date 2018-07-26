@@ -267,6 +267,10 @@ class Provision
     {
         $configs     = require APP_PATH . "/config/rulesApi.php";
 
+        echo "<pre>";
+        var_dump($this->Pattern);
+        var_dump($configs->get($this->Pattern));
+
         $this->RulesPattern = $configs->get($this->Pattern);
         if ($this->RulesPattern) {
             $this->Rules  = $this->RulesPattern->get($this->Method);
@@ -280,7 +284,10 @@ class Provision
 
     private function setConfig($app)
     {
+        echo "<pre>";
+        var_dump($app->getRouter());
         $this->Pattern = $app->getRouter()->getMatchedRoute()->getPattern();
+        $this->Prefix  = $app->getRouter()->getMatchedRoute()->getPattern();
         $this->Method  = $this->Request->getMethod();
     }
 }

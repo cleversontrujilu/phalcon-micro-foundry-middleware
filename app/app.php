@@ -9,14 +9,16 @@ use Phalcon\Mvc\Micro\Collection as MicroCollection;
 
 $content = new MicroCollection();
 
-// Define a classe controller manipuladora da requisição e define o parametro de LazyLoading
-$content->setHandler('ContentController' , true);
 // Prefixo das chamadas
 $content->setPrefix('/content');
 
+// Define a classe controller manipuladora da requisição e define o parametro de LazyLoading
+$content->setHandler('ContentController' , true);
+
 //Define a rota /
-$content->get( '/'   , 'index');
-$content->post('/'   , 'add');
+$content->get( '/'         , 'index');
+$content->get( '/corvo'    , 'index');
+$content->post('/'         , 'add');
 
 // Define a chamada
 $app->mount($content);
@@ -25,7 +27,7 @@ $app->mount($content);
  * Rotas a partir de função
  */
 $app->get('/', function () use($app) {
-    $app->forge->setData("Debes golpear el hierro cuando aun esta al rojo vivo - Publio Siro!");    
+    $app->forge->setData("Debes golpear el hierro cuando aun esta al rojo vivo - Publio Siro!");
 });
 
 /**
@@ -41,13 +43,12 @@ $app->notFound(function () use($app) {
         [
             'status'  => 'not_found',
             'code'    => 404,
-            'message' => "Endpoint inexistente",
+            'message' => "Recurso inexistente",
         ]
     );
 
     $app->response->setContent($message);
     $app->response->send();
-
 });
 
 /**

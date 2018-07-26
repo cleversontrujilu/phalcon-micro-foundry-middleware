@@ -46,7 +46,7 @@ try {
     /**
      * Implementa a classe de middleware
      */
-    include APP_PATH . '/config/middleware.php';
+    //include APP_PATH . '/config/middleware.php';
 
 
     /**

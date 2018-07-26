@@ -4,20 +4,46 @@ return new Phalcon\Config(
     [
         '/content' =>
         [
-            'GET' =>
-            [
-                'fields' => [
-                    ['field' => "corvo"    , 'name' => "Corvo"   , 'rules' => "PresenceOf"],
-                    ['field' => "cabrito"  , 'name' => "Cabrito" , 'rules' => "PresenceOf|Numericality"]
+            'Handler' => "ContentController",
+            
+            'routs' => [
+                '/' => [
+                    'GET' =>
+                    [
+                        'action' => 'index',
+                        'fields' => [
+                            ['field' => "corvo"    , 'name' => "Corvo"   , 'rules' => "PresenceOf"],
+                            ['field' => "cabrito"  , 'name' => "Cabrito" , 'rules' => "PresenceOf|Numericality"]
 
+                        ],
+                        'configs' =>
+                        [
+                            'deleteUseless'   => true,
+                            'login'           => false,
+                            'cacheTime'       => 0
+                        ]
+                    ]
                 ],
-                'configs' =>
-                [
-                    'deleteUseless'   => true,
-                    'login'           => false,                                        
-                    'cacheTime'       => 20
+
+                '/corvo' => [
+                    'GET' =>
+                    [
+                        'action' => 'index',
+                        'fields' => [
+                            ['field' => "corvo"    , 'name' => "Corvo"   , 'rules' => "PresenceOf"],
+                            ['field' => "cabrito"  , 'name' => "Cabrito" , 'rules' => "PresenceOf|Numericality"]
+
+                        ],
+                        'configs' =>
+                        [
+                            'deleteUseless'   => true,
+                            'login'           => false,
+                            'cacheTime'       => 0
+                        ]
+                    ]
                 ]
             ]
         ]
+
     ]
 );
