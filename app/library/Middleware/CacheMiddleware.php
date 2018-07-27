@@ -5,7 +5,6 @@ use Phalcon\Mvc\Micro;
 use Phalcon\Mvc\Micro\MiddlewareInterface;
 use Phalcon\Events\Event;
 
-
 class CacheMiddleware implements MiddlewareInterface
 {
     /**
@@ -31,6 +30,8 @@ class CacheMiddleware implements MiddlewareInterface
      */
     public function beforeExecuteRoute(Event $event, Micro $app)
     {
-        return true;
+        echo "AAAAA";
+        s($app->getRouter()->getMatchedRoute()->getPattern());
+        return false;
     }
 }

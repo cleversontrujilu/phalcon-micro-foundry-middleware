@@ -5,7 +5,6 @@ use Phalcon\Mvc\Micro;
 use Phalcon\Mvc\Micro\MiddlewareInterface;
 use Phalcon\Events\Event;
 
-
 class RequestMiddleware implements MiddlewareInterface
 {
     /**
@@ -17,7 +16,6 @@ class RequestMiddleware implements MiddlewareInterface
      */
     public function call(Micro $application)
     {
-
         return true;
     }
 
@@ -34,13 +32,14 @@ class RequestMiddleware implements MiddlewareInterface
         $provision    = $app->getDI()->get("provision");
         $provision->run($app);
 
-        if($provision->getStatus() !== true)
+        if ($provision->getStatus() !== true) {
             return false;
+        }
 
         return true;
     }
 
-	/**
+    /**
      * Before anything happens 02
      *
      * @param Event $event
@@ -48,9 +47,9 @@ class RequestMiddleware implements MiddlewareInterface
      *
      * @returns bool
      */
-	public function beforeHandleRoute(Event $event, Micro $app)
-	{
-		$provision    = $app->getDI()->get("provision");
-		return $provision->setHandler($app);
-	}
+    public function beforeHandleRoute(Event $event, Micro $app)
+    {
+        $provision    = $app->getDI()->get("provision");
+        return $provision->setHandler($app);
+    }
 }

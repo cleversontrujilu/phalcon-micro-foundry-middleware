@@ -290,7 +290,7 @@ class Provision
         }
 
         if (!$this->Rules and ALLOW_UNDECLARED_REQUEST === false) {
-            $this->Errors[] = "Nenhuma configuração encontrada para esse método";
+            $this->Errors[] = "Nenhuma configuração encontrada para esse endpoint";
             $this->Status   = false;
         }
     }
