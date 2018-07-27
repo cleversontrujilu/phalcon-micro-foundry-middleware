@@ -35,14 +35,12 @@ $app->after(new ResponseMiddleware());
  */
 $app->setEventsManager($event);
 
-
 /*
  *  Default response system, the system it's OK!!
  */
 $app->get('/', function () use ($app) {
     return "Debes golpear el hierro cuando aun esta al rojo vivo - Publio Siro!";
 });
-
 
 /**
  * Not found handler

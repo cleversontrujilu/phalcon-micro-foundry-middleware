@@ -4,7 +4,6 @@ namespace Middleware;
 use Phalcon\Mvc\Micro;
 use Phalcon\Mvc\Micro\MiddlewareInterface;
 
-
 class ResponseMiddleware implements MiddlewareInterface
 {
     /**
@@ -14,16 +13,9 @@ class ResponseMiddleware implements MiddlewareInterface
      *
      * @returns bool
      */
-     public function call(Micro $app)
-     {
-         $payload = [
-             'status'   => 'success',
-             'response' => $app->getReturnedValue(),
-         ];
-
-         $app->response->setJsonContent($payload);
-         $app->response->send();
-
-         return true;
-     }
+    public function call(Micro $app)
+    {
+        $forge = $app->getDI()->get("forge");
+        $forge->saveData()->send();
+    }
 }
