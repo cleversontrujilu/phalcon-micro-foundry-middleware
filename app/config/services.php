@@ -1,4 +1,8 @@
 <?php
+/**
+ * Local variables
+ * @var Phalcon\Di\FactoryDefault $DI
+ */
 
 use Phalcon\Mvc\View\Simple as View;
 use Phalcon\Mvc\Url as UrlResolver;
@@ -8,36 +12,37 @@ use Phalcon\Events\Manager as EventsManager;
 /**
  * Shared configuration service
  */
-$di->setShared('config', function () {
+$DI->setShared('config', function () {
     return include APP_PATH . "/config/config.php";
 });
 
 /*
  *  Instancia o gerenciador de eventos do Phalcon
  */
-$di->setShared("eventsManager", function() {
+$DI->setShared("eventsManager", function() {
     return new EventsManager();
 });
 
 /*
  * Responsável por provisionar e testar os dados da requisição
  */
-$di->setShared("provision" , function(){
+$DI->setShared("provision" , function(){
     return new Foundry\Provision();
 });
+
 
 /*
  * Instancia a classe Forge, responsavel por tratar e o retorno da Requisição
  */
-$di->setShared("forge" , function(){
+$DI->setShared("forge" , function(){
     return new Foundry\Forge();
 });
 
 
 /*
- * Instancia a classe Forge, responsavel por tratar e o retorno da Requisição
+ * Instancia a classe suporte para tratamento de cache
  */
-$di->setShared("cacheAdapter" , function(){
+$DI->setShared("cacheAdapter" , function(){
     return new Support\CacheAdapter();
 });
 
@@ -45,14 +50,14 @@ $di->setShared("cacheAdapter" , function(){
 /**
  * Events Manager
  */
-$di->setShared("eventsManager", function() {
+$DI->setShared("eventsManager", function() {
     return new EventsManager();
 });
 
 /**
  * Sets the view component
  */
-$di->setShared('view', function () {
+$DI->setShared('view', function () {
     $config = $this->getConfig();
 
     $view = new View();
@@ -63,7 +68,7 @@ $di->setShared('view', function () {
 /**
  * The URL component is used to generate all kind of urls in the application
  */
-$di->setShared('url', function () {
+$DI->setShared('url', function () {
     $config = $this->getConfig();
 
     $url = new UrlResolver();
@@ -74,7 +79,7 @@ $di->setShared('url', function () {
 /**
  * Database connection is created based in the parameters defined in the configuration file
  */
-$di->setShared('db', function () {
+$DI->setShared('db', function () {
     $config = $this->getConfig();
 
     $class = 'Phalcon\Db\Adapter\Pdo\\' . $config->database->adapter;

@@ -8,12 +8,12 @@ use Phalcon\Filter;
 use Phalcon\Validation;
 
 /**
- * Provision Class - Camada de validação e preparo da requisição
+ * Provision Class - Biblioteca de validação e provisionamento para a requisição
  *
  * @category   Validation
  * @package    Webservice
  * @subpackage Foundry
- * @version    2
+ * @version    3
  */
 class Provision
 {
@@ -53,16 +53,67 @@ class Provision
      */
     private $Dispatcher;
 
+    /**
+     * Arquivo de configuração da API
+     *
+     * @var array
+     */
+    private $Config;
+
 
     public function __construct()
     {
-        $this->Status  = 1;
+        $this->Status  = true;
         $this->Errors  = [];
         $this->Params  = [];
         $this->Rules   = false;
+        $this->Config  = require APP_PATH . "/config/api.php";
+        $this->Url     = $this->setUrl();
         $this->Request = new Request();
 
         $this->Dispatcher = \Phalcon\DI::getDefault()->getShared("dispatcher");
+    }
+
+    public function setHandler(\Phalcon\Mvc\Micro $app)
+    {
+        // Caso nenhuma configuração for definida
+        $config  = $this->Config->toArray();
+        if (empty($config)) {
+            return false;
+        }
+
+        // Caso não haja nenhuma configuração para aquele recurso
+        if (!isset($config[$this->URL[0]])) {
+            return false;
+        }
+
+        if (!isset($config[$this->URL[0]]['handler'])) {
+            return false;
+        }
+
+        $content = new \Phalcon\Mvc\Micro\Collection();
+        $resorce = $config[$this->URL[0]];
+
+        $content->setPrefix($this->URL[0]);
+        $content->setHandler($resorce['handler'], true);
+
+        foreach ($resorce['patterns'] as $route => $array) {
+            $action = explode("@", $route);
+
+            $method = (isset($action[1]))? strtolower($action[1]) : "map";
+            $content->$method($route, $array['action']);
+        }
+
+        $app->mount($content);
+
+        // Prefixo das chamadas
+        // Define a classe controller manipuladora da requisição e define o parametro de LazyLoading
+
+        //Define a rota /
+        //$content->get( '/'         , 'index');
+        //$content->get( '/corvo'    , 'index');
+        //$content->post('/'         , 'add');
+        //$app->mount($content);
     }
 
     public function run(\Phalcon\Mvc\Micro $App)
@@ -87,8 +138,6 @@ class Provision
 
 
     /*********************************** Métodos de validação ***************************************/
-
-
     private function checkParams()
     {
         if (!$this->Rules) {
@@ -116,7 +165,7 @@ class Provision
 
         $messages = $validation->validate($this->Params);
         if (count($messages) != 0) {
-            $this->Status = 0;
+            $this->Status = false;
             foreach ($messages as $message) {
                 $this->Errors[] = $message->getMessage();
             }
@@ -130,7 +179,7 @@ class Provision
         }
 
         $fields = $this->Rules->get("fields");
-        if (!$fields or $this->Status == 0) {
+        if (!$fields or $this->Status == false) {
             return;
         }
 
@@ -143,40 +192,9 @@ class Provision
         }
     }
 
-    /**
-    * Verifica se o método precisa de um token social e o valida
-    * TokenSocial é uma key criada para troca de informações com a sociabilização que necessita de memcached
-    *
-    * @see User::checkSocialToken()
-    * @return boolean
-    */
-    private function checkSocialToken()
-    {
-    }
-
-    /**
-    * Verifica se o método precisa de um token de conteúdo e o valida
-    *
-    * @see User::checkToken()
-    * @return boolean
-    */
-    private function checkContentToken()
-    {
-    }
-
-    /**
-      * Verifica se o metodo precisa de login do usuario e o valida
-      *
-      * @see User::checkToken()
-      * @return boolean
-      */
-    private function checkLogin()
-    {
-    }
-
     private function finish()
     {
-        if ($this->Status == 0) {
+        if ($this->Status == false) {
             throw new Exception(json_encode($this->Errors));
         } else {
             foreach ($this->Params as $key => $value) {
@@ -186,10 +204,9 @@ class Provision
     }
 
     /*********************************** Suporte ***************************************/
-
     private function needConfig($config = false)
     {
-        if ($this->Rulez->get("config")->get($config)) {
+        if ($this->Rules->get("config")->get($config)) {
             return true;
         } else {
             return false;
@@ -197,7 +214,6 @@ class Provision
     }
 
     /*********************************** GETTERS ***************************************/
-
     public function getParams()
     {
         return $this->Dispatcher->getParams();
@@ -243,7 +259,6 @@ class Provision
     }
 
     /*********************************** SETTERS ***************************************/
-
     private function setParams()
     {
         $this->Params['control'] = date("Y-m-d");
@@ -265,29 +280,40 @@ class Provision
 
     private function setRules()
     {
-        $configs     = require APP_PATH . "/config/rulesApi.php";
+        $resource = $this->Config->get($this->URL[0]);
+        //s($resource->get("patterns")->get("/corvo/{id}/cabrito"));
 
-        echo "<pre>";
-        var_dump($this->Pattern);
-        var_dump($configs->get($this->Pattern));
+        $this->Rules = $resource->get("patterns")->get($this->PatternMethod);
 
-        $this->RulesPattern = $configs->get($this->Pattern);
-        if ($this->RulesPattern) {
-            $this->Rules  = $this->RulesPattern->get($this->Method);
+        if (!$this->Rules) {
+            $this->Rules = $resource->get("patterns")->get($this->Pattern);
         }
 
         if (!$this->Rules and ALLOW_UNDECLARED_REQUEST === false) {
             $this->Errors[] = "Nenhuma configuração encontrada para esse método";
-            $this->Status   = 0;
+            $this->Status   = false;
         }
     }
 
     private function setConfig($app)
     {
-        echo "<pre>";
-        var_dump($app->getRouter());
-        $this->Pattern = $app->getRouter()->getMatchedRoute()->getPattern();
-        $this->Prefix  = $app->getRouter()->getMatchedRoute()->getPattern();
-        $this->Method  = $this->Request->getMethod();
+        $this->Pattern       = str_replace($this->URL[0], '', $app->getRouter()->getMatchedRoute()->getPattern()) ;
+        $this->Method        = $this->Request->getMethod();
+        $this->PatternMethod = $this->Pattern . "@" . $this->Method;
+        //s($this->Pattern , $this->Method , $this->PatternMethod);
+    }
+
+    private function setUrl()
+    {
+        // quebra a URL
+        $this->URL = explode("/", $_GET['_url']);
+
+        // remove o primeiro item do array, sempre vazio;
+        array_splice($this->URL, 0, 1);
+
+        // Adiciona novamente a slice /
+        foreach ($this->URL as $i => $value) {
+            $this->URL[$i] = "/" . $value;
+        }
     }
 }

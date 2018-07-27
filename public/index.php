@@ -1,7 +1,7 @@
 <?php
 
 use Phalcon\Di\FactoryDefault;
-use Phalcon\Mvc\Micro;
+
 
 error_reporting(E_ALL);
 
@@ -14,7 +14,7 @@ try {
      * The FactoryDefault Dependency Injector automatically registers the services that
      * provide a full stack framework. These default services can be overidden with custom ones.
      */
-    $di = new FactoryDefault();
+    $DI = new FactoryDefault();
 
     /**
      * Include constants
@@ -29,35 +29,21 @@ try {
     /**
      * Get config service for use in inline setup below
      */
-    $config = $di->getConfig();
+    $config = $DI->getConfig();
 
     /**
      * Include Autoloader
      */
     include APP_PATH . '/config/loader.php';
 
-    /**
-     * Starting the application
-     * Assign service locator to the application
-     */
-    $app = new Micro($di);
-
-
-    /**
-     * Implementa a classe de middleware
-     */
-    //include APP_PATH . '/config/middleware.php';
-
+	if(is_file(BASE_PATH . "/vendor/autoload.php"))
+		include BASE_PATH . "/vendor/autoload.php";
 
     /**
      * Include Application
      */
     include APP_PATH . '/app.php';
 
-    /**
-     * Handle the request
-     */
-    $app->handle();
 
 } catch (\Exception $e) {
       echo $e->getMessage() . '<br>';

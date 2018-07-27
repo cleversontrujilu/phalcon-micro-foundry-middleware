@@ -6,13 +6,12 @@ class ContentController extends Controller
 
   public function index()
   {
-        $this->forge->setData("1");
+	  return ['abacate' => "martoves"];
   }
 
   public function add()
   {
-
+	  return ['abacate' => "martoves"];
   }
-
 
 }
