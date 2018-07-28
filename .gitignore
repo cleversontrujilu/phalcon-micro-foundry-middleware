@@ -1,5 +1,5 @@
-/application/cache/
-!/application/cache/.htaccess
-!/application/cache/index.html
+/app/cache/*
+!/app/cache/.htaccess
+!/app/cache/index.html
 
 /vendor/

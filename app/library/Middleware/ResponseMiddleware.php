@@ -16,6 +16,6 @@ class ResponseMiddleware implements MiddlewareInterface
     public function call(Micro $app)
     {
         $forge = $app->getDI()->get("forge");
-        $forge->saveData()->send();
+        $forge->finish();
     }
 }

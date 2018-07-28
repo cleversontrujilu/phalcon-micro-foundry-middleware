@@ -114,6 +114,8 @@ class Provision
         //$content->get( '/corvo'    , 'index');
         //$content->post('/'         , 'add');
         //$app->mount($content);
+
+        return true;
     }
 
     public function run(\Phalcon\Mvc\Micro $App)
@@ -282,6 +284,8 @@ class Provision
     {
         $resource = $this->Config->get($this->URL[0]);
         //s($resource->get("patterns")->get("/corvo/{id}/cabrito"));
+		if(!$resource)
+			return false;
 
         $this->Rules = $resource->get("patterns")->get($this->PatternMethod);
 

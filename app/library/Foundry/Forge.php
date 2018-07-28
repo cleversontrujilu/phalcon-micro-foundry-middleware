@@ -62,7 +62,7 @@ class Forge
 
         $this->sendHeaderRequest();
 
-        $this->send();
+        return $this->send();
     }
 
     /**
@@ -94,9 +94,10 @@ class Forge
 			 ->send();
     }
 
-	private setData()
+	private function setData()
 	{
-		$this->Data =$this->App->getReturnedValue()
+		$this->Data =$this->App->getReturnedValue();
+		return $this;
 	}
 
     private function setCachekeyName()

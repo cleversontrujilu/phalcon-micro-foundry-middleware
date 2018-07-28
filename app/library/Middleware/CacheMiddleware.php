@@ -31,8 +31,6 @@ class CacheMiddleware implements MiddlewareInterface
     public function beforeExecuteRoute(Event $event, Micro $app)
     {
         $forge = $app->getDI()->get("forge");
-        $forge->run($app);
-
-        return $forge->send();
+        return $forge->run($app);
     }
 }
