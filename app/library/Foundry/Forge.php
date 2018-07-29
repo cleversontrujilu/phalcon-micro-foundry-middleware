@@ -2,7 +2,9 @@
 namespace Foundry;
 
 use Phalcon\Http\Response;
+use Phalcon\Http\Request;
 use Phalcon\Events\Event;
+
 
 class Forge
 {
@@ -46,6 +48,7 @@ class Forge
         $this->Provision    = \Phalcon\DI::getDefault()->getShared("provision");
         $this->Cache        = \Phalcon\DI::getDefault()->getShared("cacheAdapter");
         $this->View         = \Phalcon\DI::getDefault()->getShared("view");
+        $this->Request      = new Request();
         $this->Header       = new Response();
     }
 
@@ -104,7 +107,7 @@ class Forge
     {
         $args  = md5(http_build_query($this->Provision->getParams()));
 
-        $this->CacheActionName = md5($this->Provision->getPattern() . $this->Provision->getMethod()) . "-"
+        $this->CacheActionName = md5($this->Provision->getPattern() . $this->Request->getMethod()) . "-"
                            . md5(http_build_query($this->Provision->getParams()));
     }
 

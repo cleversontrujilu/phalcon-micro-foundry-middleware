@@ -68,7 +68,7 @@ $app->notFound(function () use ($app) {
 $app->error(
     function ($exception) use ($app) {
         // TODO: Diferença entre status 400 e  500
-        $app->response->setStatusCode(400, 'Bad Request');
+        $app->response->setStatusCode(500, 'Bad Request');
         $app->response->sendHeaders();
         $app->response->setHeader("Content-Type", "application/json");
 

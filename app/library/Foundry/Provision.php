@@ -58,26 +58,38 @@ class Provision
      *
      * @var array
      */
-    private $Config;
+    private $Resource;
+
+
+    /**
+     * Arquivo de configuração da API
+     *
+     * @object \Phalcon\Mvc\Micro
+     */
+    private $App;
 
 
     public function __construct()
     {
-        $this->Status  = true;
-        $this->Errors  = [];
-        $this->Params  = [];
-        $this->Rules   = false;
-        $this->Config  = require APP_PATH . "/config/api.php";
-        $this->Url     = $this->setUrl();
-        $this->Request = new Request();
+        $this->Status   = true;
+        $this->Errors   = [];
+        $this->Params   = [];
+        $this->Rules    = false;
+        $this->Resource = require APP_PATH . "/config/api.php";
+        $this->Url      = $this->setUrl();
+        $this->Request  = new Request();
+        $this->Configs  = [];
 
         $this->Dispatcher = \Phalcon\DI::getDefault()->getShared("dispatcher");
     }
 
     public function setHandler(\Phalcon\Mvc\Micro $app)
     {
+        // Set app
+        $this->App = $app;
+
         // Caso nenhuma configuração for definida
-        $config  = $this->Config->toArray();
+        $config  = $this->Resource->toArray();
         if (empty($config)) {
             return false;
         }
@@ -99,11 +111,9 @@ class Provision
 
         foreach ($resorce['patterns'] as $route => $array) {
             $action = explode("@", $route);
-
             $method = (isset($action[1]))? strtolower($action[1]) : "map";
-            $content->$method($route, $array['action']);
+            $content->$method($action[0], $array['action']);
         }
-
         $app->mount($content);
 
         // Prefixo das chamadas
@@ -118,12 +128,17 @@ class Provision
         return true;
     }
 
-    public function run(\Phalcon\Mvc\Micro $App)
+    public function run()
     {
-        $this->setConfig($App);
+
+        // Set a váriavel de pattern da requisiçãoptimize
+        $this->setPattern();
 
         // Atribui a $Rules as regras de validação
         $this->setRules();
+
+        // Atribui a $Configs as regras de configuração do endpoint
+        $this->setConfigs();
 
         // Atribui os parametros da requisição
         $this->setParams();
@@ -208,7 +223,11 @@ class Provision
     /*********************************** Suporte ***************************************/
     private function needConfig($config = false)
     {
-        if ($this->Rules->get("config")->get($config)) {
+		if(empty($this->Configs)) {
+			return false;
+		}
+
+        if ($this->Configs->get($config)) {
             return true;
         } else {
             return false;
@@ -243,7 +262,7 @@ class Provision
 
     public function getConfig($config = false)
     {
-        if (empty($config) || empty($this->Rules)) {
+        if (empty($config) || empty($this->Configs)) {
             return false;
         }
 
@@ -253,11 +272,6 @@ class Provision
     public function getPattern()
     {
         return $this->Pattern;
-    }
-
-    public function getMethod()
-    {
-        return $this->Method;
     }
 
     /*********************************** SETTERS ***************************************/
@@ -282,12 +296,14 @@ class Provision
 
     private function setRules()
     {
-        $resource = $this->Config->get($this->URL[0]);
+        $resource = $this->Resource->get($this->URL[0]);
         //s($resource->get("patterns")->get("/corvo/{id}/cabrito"));
 		if(!$resource)
 			return false;
 
-        $this->Rules = $resource->get("patterns")->get($this->PatternMethod);
+		$method = $this->Request->getMethod();
+
+        $this->Rules = $resource->get("patterns")->get($this->Pattern . "@" . $method);
 
         if (!$this->Rules) {
             $this->Rules = $resource->get("patterns")->get($this->Pattern);
@@ -299,12 +315,17 @@ class Provision
         }
     }
 
-    private function setConfig($app)
+    private function setConfigs()
     {
-        $this->Pattern       = str_replace($this->URL[0], '', $app->getRouter()->getMatchedRoute()->getPattern()) ;
-        $this->Method        = $this->Request->getMethod();
-        $this->PatternMethod = $this->Pattern . "@" . $this->Method;
-        //s($this->Pattern , $this->Method , $this->PatternMethod);
+        if(!$this->Rules)
+            return false;
+
+        $this->Configs = $this->Rules->get("configs");
+    }
+
+    private function setPattern()
+    {
+        $this->Pattern       = str_replace($this->URL[0], '', $this->App->getRouter()->getMatchedRoute()->getPattern());
     }
 
     private function setUrl()
