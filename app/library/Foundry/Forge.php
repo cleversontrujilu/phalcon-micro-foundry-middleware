@@ -50,6 +50,7 @@ class Forge
         $this->View         = \Phalcon\DI::getDefault()->getShared("view");
         $this->Request      = new Request();
         $this->Header       = new Response();
+		$this->Dispatcher = \Phalcon\DI::getDefault()->getShared("dispatcher");
     }
 
 
@@ -105,10 +106,10 @@ class Forge
 
     private function setCachekeyName()
     {
-        $args  = md5(http_build_query($this->Provision->getParams()));
+        $args  = md5(http_build_query($this->Dispatcher->getParams()));
 
-        $this->CacheActionName = md5($this->Provision->getPattern() . $this->Request->getMethod()) . "-"
-                           . md5(http_build_query($this->Provision->getParams()));
+        $this->CacheActionName = md5($this->Provision->getRoute() . $this->Request->getMethod()) . "-"
+                           . md5(http_build_query($this->Dispatcher->getParams()));
     }
 
     private function restoreCache()

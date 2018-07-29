@@ -50,7 +50,7 @@ class RequestMiddleware implements MiddlewareInterface
     public function beforeHandleRoute(Event $event, Micro $app)
     {
         $provision    = $app->getDI()->get("provision");
-        $provision->setHandler($app);
+        $provision->init($app);
         return true;
     }
 }

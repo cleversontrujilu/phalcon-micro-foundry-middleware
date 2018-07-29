@@ -3,7 +3,7 @@
 return new Phalcon\Config([
 	'/content' => [
 		'handler' => 'ContentController',
-		'patterns' => [
+		'routes' => [
 			'/@GET'  => [
 				'action' => 'index'
 			],

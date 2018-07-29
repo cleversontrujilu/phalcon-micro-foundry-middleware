@@ -18,6 +18,13 @@ use Phalcon\Validation;
 class Provision
 {
 
+   /**
+	 * Status geral da validação
+	 *
+	 * @var boolean
+	 */
+	private $Status;
+
   /**
     * Lista de parametros enviados pela requisição
     *
@@ -32,300 +39,221 @@ class Provision
       */
     private $Errors;
 
-    /**
-     * Status geral da validação
-     *
-     * @var boolean
-     */
-    private $Status;
-
-    /**
-     * lista de Regras para validação da requisição
-     *
-     * @var array
-     */
-    private $Rules;
-
-    /**
-     * Intancia Dispatcher do Phalcon
-     *
-     * @var array
-     */
-    private $Dispatcher;
 
     /**
      * Arquivo de configuração da API
      *
-     * @var array
+     * @var string
      */
     private $Resource;
 
 
-    /**
-     * Arquivo de configuração da API
+	/**
+     * Routa a partir do prefixo
      *
-     * @object \Phalcon\Mvc\Micro
+     * @var string
      */
-    private $App;
+    private $Route;
 
 
     public function __construct()
     {
-        $this->Status   = true;
-        $this->Errors   = [];
-        $this->Params   = [];
-        $this->Rules    = false;
-        $this->Resource = require APP_PATH . "/config/api.php";
-        $this->Url      = $this->setUrl();
-        $this->Request  = new Request();
-        $this->Configs  = [];
+        $this->Status        = true;
+        $this->Errors        = [];
+        $this->Params        = [];
+		$this->ResorceConfig = [];
+		$this->Rules         = null;
+		$this->Route         = null;
+		$this->Pattern       = null;
 
-        $this->Dispatcher = \Phalcon\DI::getDefault()->getShared("dispatcher");
+		$this->Dispatcher    = \Phalcon\DI::getDefault()->getShared("dispatcher");
+		$this->Request       = new Request();
     }
 
-    public function setHandler(\Phalcon\Mvc\Micro $app)
+    public function init(\Phalcon\Mvc\Micro $app)
     {
-        // Set app
-        $this->App = $app;
+		$this->App = $app;
 
-        // Caso nenhuma configuração for definida
-        $config  = $this->Resource->toArray();
-        if (empty($config)) {
-            return false;
-        }
+		$this->setUrl();
 
-        // Caso não haja nenhuma configuração para aquele recurso
-        if (!isset($config[$this->URL[0]])) {
-            return false;
-        }
+		$this->setResourceConfig();
 
-        if (!isset($config[$this->URL[0]]['handler'])) {
-            return false;
-        }
-
-        $content = new \Phalcon\Mvc\Micro\Collection();
-        $resorce = $config[$this->URL[0]];
-
-        $content->setPrefix($this->URL[0]);
-        $content->setHandler($resorce['handler'], true);
-
-        foreach ($resorce['patterns'] as $route => $array) {
-            $action = explode("@", $route);
-            $method = (isset($action[1]))? strtolower($action[1]) : "map";
-            $content->$method($action[0], $array['action']);
-        }
-        $app->mount($content);
-
-        // Prefixo das chamadas
-        // Define a classe controller manipuladora da requisição e define o parametro de LazyLoading
-
-        //Define a rota /
-        //$content->get( '/'         , 'index');
-        //$content->get( '/corvo'    , 'index');
-        //$content->post('/'         , 'add');
-        //$app->mount($content);
-
-        return true;
+		return $this->registerHandlerRoute();
     }
 
-    public function run()
-    {
+	public function registerHandlerRoute()
+	{
+		if(empty($this->ResorceConfig))
+			return false;
 
-        // Set a váriavel de pattern da requisiçãoptimize
-        $this->setPattern();
+		$ResorceConfig = $this->ResorceConfig->toArray();
 
-        // Atribui a $Rules as regras de validação
-        $this->setRules();
-
-        // Atribui a $Configs as regras de configuração do endpoint
-        $this->setConfigs();
-
-        // Atribui os parametros da requisição
-        $this->setParams();
-
-        // Valida os parametros recebidos
-        $this->checkParams();
-
-        // Valida e filtra os parametros recebidos
-        $this->filterParams();
-
-        // Finaliza a camada de validação, retorna uma exception com os erros acumulados
-        $this->finish();
-    }
-
-
-    /*********************************** Métodos de validação ***************************************/
-    private function checkParams()
-    {
-        if (!$this->Rules) {
-            return;
-        }
-
-        $fields = $this->Rules->get("fields");
-        if (!$fields) {
-            return false;
-        }
-
-        $validation = new Validation();
-
-        foreach ($fields as $field) {
-            $Rules = explode("|", $field['rules']);
-
-            foreach ($Rules as $rule) {
-                $ValidatorClass = "Phalcon\Validation\Validator\\" . $rule;
-                $validation->add(
-                      $field->get("field"),
-                      new $ValidatorClass()
-                );
-            }
-        }
-
-        $messages = $validation->validate($this->Params);
-        if (count($messages) != 0) {
-            $this->Status = false;
-            foreach ($messages as $message) {
-                $this->Errors[] = $message->getMessage();
-            }
-        }
-    }
-
-    private function filterParams()
-    {
-        if (!$this->Rules) {
-            return;
-        }
-
-        $fields = $this->Rules->get("fields");
-        if (!$fields or $this->Status == false) {
-            return;
-        }
-
-        $filter = \Phalcon\DI::getDefault()->getShared("filter");
-
-        foreach ($fields as $field) {
-            $filters                       = (isset($field['filters']))? explode("|", $field['filters']) : [];
-            $filters                       = array_merge(["trim","striptags","trim"], $filters);
-            $this->Params[$field['field']] = $filter->sanitize($this->Params[$field['field']], $filters);
-        }
-    }
-
-    private function finish()
-    {
-        if ($this->Status == false) {
-            throw new Exception(json_encode($this->Errors));
-        } else {
-            foreach ($this->Params as $key => $value) {
-                $this->Dispatcher->setParams($this->Params);
-            }
-        }
-    }
-
-    /*********************************** Suporte ***************************************/
-    private function needConfig($config = false)
-    {
-		if(empty($this->Configs)) {
+		if(!isset($ResorceConfig["handler"])) {
 			return false;
 		}
 
-        if ($this->Configs->get($config)) {
-            return true;
-        } else {
-            return false;
-        }
+		$content = new \Phalcon\Mvc\Micro\Collection();
+		$content->setPrefix($this->URL[0]);
+		$content->setHandler($ResorceConfig['handler'], true);
+
+		foreach ($ResorceConfig['routes'] as $route => $array) {
+			$route = explode("@" , $route);
+
+			// TODO: validar os verbos existentes
+			// Extrai o método da rota cadastrada na config
+			$method = (isset($action[1]))? strtolower($action[1]) : "map";
+
+			// Cadatra a route
+			$content->$method($route[0], $array['action']);
+		}
+
+		$this->App->mount($content);
+
+		return true;
+	}
+
+	public function run()
+    {
+		// Seta o nome do pattern
+		$this->setPattern();
+
+		// Seta o nome da rota apartir do prefix
+		$this->setRoute();
+
+		// Atribui as regras de validação da rota
+		$this->setRulesValidation();
+
+		// Atribui as configurações extras da rota
+		$this->setRouteConfigs();
+
+		// Atribui os parametros da requisição
+		$this->setParams();
+
+		// Valida os parametros recebidos
+		$this->checkParams();
+
+		// Valida e filtra os parametros recebidos
+		$this->filterParams();
+
+		// Finaliza
+		$this->finish();
     }
 
-    /*********************************** GETTERS ***************************************/
-    public function getParams()
-    {
-        return $this->Dispatcher->getParams();
-    }
+	private function finish()
+	{
+		if ($this->Status == false) {
+			throw new Exception(json_encode($this->Errors));
+		} else {
+			foreach ($this->Params as $key => $value) {
+				$this->Dispatcher->setParams($this->Params);
+			}
+		}
+	}
 
-    public function getDispatcher()
-    {
-        return $this->Dispatcher;
-    }
+    /*********************************** Métodos de validação ***************************************/
 
-    public function getStatus()
-    {
-        return $this->Status;
-    }
+	private function checkParams()
+	{
+		  if (!$this->Rules) {
+			  return;
+		  }
 
-    public function getRules()
-    {
-        return $this->Rules;
-    }
+		  $fields = $this->Rules->get("fields");
+		  if (!$fields) {
+			  return false;
+		  }
 
-    public function getParam($key = false, $filter = null)
-    {
-        return $this->Dispatcher->getParam($key);
-    }
+		  $validation = new Validation();
 
-    public function getConfig($config = false)
-    {
-        if (empty($config) || empty($this->Configs)) {
-            return false;
-        }
+		  foreach ($fields as $field) {
+			  $Rules = explode("|", $field['rules']);
 
-        return $this->Rules->get("configs")->get($config);
-    }
+			  foreach ($Rules as $rule) {
+				  $ValidatorClass = "Phalcon\Validation\Validator\\" . $rule;
+				  $validation->add(
+						$field->get("field"),
+						new $ValidatorClass()
+				  );
+			  }
+		  }
 
-    public function getPattern()
-    {
-        return $this->Pattern;
-    }
+		  $messages = $validation->validate($this->Params);
+		  if (count($messages) != 0) {
+			  $this->Status = false;
+			  foreach ($messages as $message) {
+				  $this->Errors[] = $message->getMessage();
+			  }
+		  }
+	  }
 
-    /*********************************** SETTERS ***************************************/
-    private function setParams()
-    {
-        $this->Params['control'] = date("Y-m-d");
+	  private function filterParams()
+	  {
+		  if (!$this->Rules) {
+			  return;
+		  }
 
-        foreach ($this->Request->get() as $key => $value) {
-            $this->Params[$key] = $value;
-        }
+		  $fields = $this->Rules->get("fields");
+		  if (!$fields or $this->Status == false) {
+			  return;
+		  }
 
-        // os valores de $_POST sobscrevem sempre os Valores de $_GET
-        foreach ($this->Request->getPost() as $key => $value) {
-            $this->Params[$key] = $value;
-        }
-    }
+		  $filter = \Phalcon\DI::getDefault()->getShared("filter");
 
-    public function setParam($key = false, $value = false)
-    {
-        $this->Params[$key] = $value;
-    }
+		  foreach ($fields as $field) {
+			  $filters                       = (isset($field['filters']))? explode("|", $field['filters']) : [];
+			  $filters                       = array_merge(["trim","striptags","trim"], $filters);
+			  $this->Params[$field['field']] = $filter->sanitize($this->Params[$field['field']], $filters);
+		  }
+	  }
 
-    private function setRules()
-    {
-        $resource = $this->Resource->get($this->URL[0]);
-        //s($resource->get("patterns")->get("/corvo/{id}/cabrito"));
-		if(!$resource)
+	/*********************************** Métodos de Getters ***************************************/
+	public function getStatus()
+	{
+		return $this->Status;
+	}
+
+	public function getRoute()
+	{
+		return $this->Route;
+	}
+
+	public function getPattern()
+	{
+		return $this->Pattern;
+	}
+
+	public function getConfig($config = false)
+	{
+		if (empty($config) || empty($this->Configs)) {
 			return false;
+		}
 
-		$method = $this->Request->getMethod();
+		return $this->Rules->get("configs")->get($config);
+	}
 
-        $this->Rules = $resource->get("patterns")->get($this->Pattern . "@" . $method);
+	/*********************************** Private setters ***************************************/
+	private function setParams()
+	{
+		$this->Params['control'] = date("Y-m-d");
 
-        if (!$this->Rules) {
-            $this->Rules = $resource->get("patterns")->get($this->Pattern);
-        }
+		foreach ($this->Request->get() as $key => $value) {
+			$this->Params[$key] = $value;
+		}
 
-        if (!$this->Rules and ALLOW_UNDECLARED_REQUEST === false) {
-            $this->Errors[] = "Nenhuma configuração encontrada para esse endpoint";
-            $this->Status   = false;
-        }
-    }
+		// os valores de $_POST sobscrevem sempre os Valores de $_GET
+		foreach ($this->Request->getPost() as $key => $value) {
+			$this->Params[$key] = $value;
+		}
+	}
 
-    private function setConfigs()
+	private function setPattern()
+	{
+		$this->Pattern = $this->App->getRouter()->getMatchedRoute()->getPattern();
+	}
+
+    private function setRoute()
     {
-        if(!$this->Rules)
-            return false;
-
-        $this->Configs = $this->Rules->get("configs");
-    }
-
-    private function setPattern()
-    {
-        $this->Pattern       = str_replace($this->URL[0], '', $this->App->getRouter()->getMatchedRoute()->getPattern());
+        $this->Route       = str_replace($this->URL[0], '', $this->Pattern);
     }
 
     private function setUrl()
@@ -336,9 +264,49 @@ class Provision
         // remove o primeiro item do array, sempre vazio;
         array_splice($this->URL, 0, 1);
 
-        // Adiciona novamente a slice /
-        foreach ($this->URL as $i => $value) {
-            $this->URL[$i] = "/" . $value;
-        }
+		// Adiciona novamente a slice /
+		foreach ($this->URL as $i => $value) {
+		 	$this->URL[$i] = "/" . $value;
+		}
     }
+
+	private function setRulesValidation()
+	{
+		if(!$this->ResorceConfig) {
+			return false;
+		}
+
+		$this->Rules = $this->ResorceConfig->get("routes")->get($this->Route . "@" . $this->Request->getMethod());
+
+		if (!$this->Rules) {
+			$this->Rules = $this->ResorceConfig->get("routes")->get($this->Route);
+		}
+
+		if (!$this->Rules and ALLOW_UNDECLARED_REQUEST === false) {
+			$this->Errors[] = "Nenhuma configuração encontrada para esse endpoint";
+			$this->Status   = false;
+		}
+	}
+
+	private function setRouteConfigs()
+	{
+		if(!$this->Rules)
+			return false;
+
+		$this->Configs = $this->Rules->get("configs");
+	}
+
+	private function setResourceConfig()
+	{
+		$resorces = require APP_PATH . "/config/resources.php";
+
+		if(empty($resorces)) {
+			return false;
+		}
+
+		if($resorces->get($this->URL[0])) {
+			$this->ResorceConfig = $resorces->get($this->URL[0]);
+		}
+
+	}
 }
