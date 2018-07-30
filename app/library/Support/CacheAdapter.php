@@ -5,7 +5,6 @@ use Phalcon\Cache\Frontend\Data as FrontData;
 
 class CacheAdapter
 {
-
     private $Adapter;
 
     private $Cache;
@@ -27,24 +26,28 @@ class CacheAdapter
             break;
 
           case 'memcached':
-
+            // TODO: implement MemcachedAdapter();
             break;
 
           case 'apc':
-
+            // TODO: implement APCAdapter();
             break;
+
+          case 'redis':
+              // TODO: implement RedisAdapter();
+              break;
         }
     }
 
-    private  function configFileAdapter()
+    private function configFileAdapter()
     {
-          $frontCache = new FrontData(
+        $frontCache = new FrontData(
               [
                   'lifetime' => 120,
               ]
           );
 
-          $this->Cache = new \Phalcon\Cache\Backend\File(
+        $this->Cache = new \Phalcon\Cache\Backend\File(
               $frontCache,
               [
                   'cacheDir' => '../app/cache/',
@@ -54,12 +57,14 @@ class CacheAdapter
 
     private function configMemcachedAdapter()
     {
-
     }
 
     private function configApcAdapter()
     {
+    }
 
+    private function configRedisAdapter()
+    {
     }
 
     public function get($key = false, $lifetime = false)
@@ -69,8 +74,7 @@ class CacheAdapter
 
     public function save($key, $data)
     {
-        $lifeTime = ($this->Provision->getConfig("cacheTime") !== NULL)? $this->Provision->getConfig("cacheTime") : DEFAULT_CACHE_TIME;
-        return $this->Cache->save($key , $data , $lifeTime);
+        $lifeTime = ($this->Provision->getConfig("cacheTime") !== null)? $this->Provision->getConfig("cacheTime") : DEFAULT_CACHE_TIME;
+        return $this->Cache->save($key, $data, $lifeTime);
     }
-
 }

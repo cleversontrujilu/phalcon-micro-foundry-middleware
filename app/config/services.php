@@ -31,6 +31,12 @@ $DI->setShared("forge", function () {
     return new Foundry\Forge();
 });
 
+/**
+ * Instancia a classe de filters e adiciona filtros personalisados
+ */
+$di->setShared("filter", function () {
+    return Support\Filters::initialize()->getFilter();
+});
 
 /*
  * Instancia a classe suporte para tratamento de cache
