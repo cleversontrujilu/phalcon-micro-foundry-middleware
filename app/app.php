@@ -72,14 +72,17 @@ $app->error(
         $app->response->sendHeaders();
         $app->response->setHeader("Content-Type", "application/json");
 
-        echo json_encode(
+        $message = json_encode(
               [
                   'status'  => 'error',
                   'code'    => $exception->getCode(),
                   'message' => $exception->getMessage(),
               ]
           );
-        return false;
+
+        $app->response->setContent($message);
+        $app->response->send();
+        die();
     }
 );
 

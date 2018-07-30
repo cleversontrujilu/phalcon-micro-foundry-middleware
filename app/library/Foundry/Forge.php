@@ -5,7 +5,6 @@ use Phalcon\Http\Response;
 use Phalcon\Http\Request;
 use Phalcon\Events\Event;
 
-
 class Forge
 {
     /**
@@ -50,13 +49,13 @@ class Forge
         $this->View         = \Phalcon\DI::getDefault()->getShared("view");
         $this->Request      = new Request();
         $this->Header       = new Response();
-		$this->Dispatcher = \Phalcon\DI::getDefault()->getShared("dispatcher");
+        $this->Dispatcher = \Phalcon\DI::getDefault()->getShared("dispatcher");
     }
 
 
     public function run(\Phalcon\Mvc\Micro $app)
     {
-    	$this->App = $app;
+        $this->App = $app;
 
         $this->setCachekeyName();
 
@@ -85,24 +84,24 @@ class Forge
             'response' => $this->Data,
         ];
 
-       $this->App->response->setJsonContent($payload);
-       $this->App->response->send();
+        $this->App->response->setJsonContent($payload);
+        $this->App->response->send();
 
-		return false;
+        return false;
     }
 
     public function finish()
     {
-		$this->setData()
-			 ->saveCache()
-			 ->send();
+        $this->setData()
+             ->saveCache()
+             ->send();
     }
 
-	private function setData()
-	{
-		$this->Data =$this->App->getReturnedValue();
-		return $this;
-	}
+    private function setData()
+    {
+        $this->Data =$this->App->getReturnedValue();
+        return $this;
+    }
 
     private function setCachekeyName()
     {
