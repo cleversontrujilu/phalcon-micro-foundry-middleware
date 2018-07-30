@@ -66,13 +66,12 @@ class Provision
         $this->Route         = null;
         $this->Pattern       = null;
 
-        $this->Dispatcher    = \Phalcon\DI::getDefault()->getShared("dispatcher");
         $this->request       = new Request();
     }
 
     public function init(\Phalcon\Mvc\Micro $app)
     {
-        $this->App = $app;
+        $this->app = $app;
 
         $this->setUrl();
 
@@ -108,7 +107,7 @@ class Provision
             $content->$method($route[0], $array['action']);
         }
 
-        $this->App->mount($content);
+        $this->app->mount($content);
 
         return true;
     }
@@ -144,10 +143,6 @@ class Provision
     {
         if ($this->Status == false) {
             throw new Exception(json_encode($this->Errors));
-        } else {
-            foreach ($this->Params as $key => $value) {
-                $this->Dispatcher->setParams($this->Params);
-            }
         }
     }
 
@@ -237,10 +232,25 @@ class Provision
         return (object) $this->Params;
     }
 
+    public function getParams()
+    {
+        return $this->Params;
+    }
+
+    public function getParam($param = false)
+    {
+        if (!$param || !isset($this->Params[$param])) {
+            return false;
+        }
+
+        return $this->Params;
+    }
+
+
     /*********************************** Private setters ***************************************/
     private function setParams()
     {
-        $this->Params['control'] = date("Y-m-d");
+        $this->Params['control'] = date("Y-m-d H:i:s").microtime();
 
         foreach ($this->request->get() as $key => $value) {
             $this->Params[$key] = $value;
@@ -254,7 +264,7 @@ class Provision
 
     private function setPattern()
     {
-        $this->Pattern = $this->App->getRouter()->getMatchedRoute()->getPattern();
+        $this->Pattern = $this->app->getRouter()->getMatchedRoute()->getPattern();
     }
 
     private function setRoute()

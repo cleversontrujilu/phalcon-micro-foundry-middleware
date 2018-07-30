@@ -5,7 +5,10 @@ return new Phalcon\Config([
         'handler' => 'ContentController',
         'routes' => [
             '/@GET'  => [
-                'action' => 'index'
+                'action' => 'index',
+                'configs' => [
+                    'cacheTime' => 200
+                ]
             ],
             '/@POST' => [
                 'action' => 'add',
@@ -13,6 +16,7 @@ return new Phalcon\Config([
                     ['field' => "corvo"    , 'name' => "Corvo"   , 'rules' => "PresenceOf"],
                     ['field' => "cabrito"  , 'name' => "Cabrito" , 'rules' => "PresenceOf|Numericality"]
                 ],
+
             ],
             '/@PUT' => [
                 'action' => 'add',

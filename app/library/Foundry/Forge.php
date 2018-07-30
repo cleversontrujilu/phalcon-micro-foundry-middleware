@@ -44,12 +44,11 @@ class Forge
 
     public function __construct()
     {
-        $this->Provision    = \Phalcon\DI::getDefault()->getShared("provision");
-        $this->Cache        = \Phalcon\DI::getDefault()->getShared("cacheAdapter");
-        $this->View         = \Phalcon\DI::getDefault()->getShared("view");
-        $this->Request      = new Request();
-        $this->Header       = new Response();
-        $this->Dispatcher = \Phalcon\DI::getDefault()->getShared("dispatcher");
+        $this->provision    = \Phalcon\DI::getDefault()->getShared("provision");
+        $this->cache        = \Phalcon\DI::getDefault()->getShared("cacheAdapter");
+        $this->view         = \Phalcon\DI::getDefault()->getShared("view");
+        $this->request      = new Request();
+        $this->header       = new Response();
     }
 
 
@@ -105,19 +104,19 @@ class Forge
 
     private function setCachekeyName()
     {
-        $args  = md5(http_build_query($this->Dispatcher->getParams()));
-
-        $this->CacheActionName = md5($this->Provision->getRoute() . $this->Request->getMethod()) . "-"
-                           . md5(http_build_query($this->Dispatcher->getParams()));
+        $args  				   = md5(http_build_query($this->provision->getParams()));
+        $this->cacheActionName = md5($this->provision->getRoute() . $this->request->getMethod()) . "-" . $args;
     }
 
     private function restoreCache()
     {
-        $this->StoredCache = $this->Cache->get($this->CacheActionName);
-        if ($this->StoredCache) {
-            $this->Data         = $this->StoredCache->Data;
-            $this->lastModified = $this->StoredCache->lastModified;
-            $this->ETag         = $this->StoredCache->ETag;
+        if ($this->cacheTime !== 0) {
+            $this->StoredCache = $this->cache->get($this->cacheActionName);
+            if ($this->StoredCache) {
+                $this->Data         = $this->StoredCache->Data;
+                $this->lastModified = $this->StoredCache->lastModified;
+                $this->ETag         = $this->StoredCache->ETag;
+            }
         }
     }
 
@@ -128,7 +127,7 @@ class Forge
             $cache->Data          = $this->Data;
             $cache->lastModified  = $this->lastModified;
             $cache->ETag          = $this->ETag;
-            //$this->Cache->save($this->CacheActionName, $cache, $this->cacheTime);
+            $this->cache->save($this->cacheActionName, $cache, $this->cacheTime);
         }
 
         return $this;
@@ -138,23 +137,22 @@ class Forge
     {
         if (!$this->StoredCache) {
             $this->lastModified = date("D, d M Y H:i:s");
-            $this->ETag         = md5($this->CacheActionName . $this->lastModified);
+            $this->ETag         = md5($this->cacheActionName . $this->lastModified);
         }
-        $this->cacheTime    = (!empty($this->Provision->getConfig("cacheTime")) or $this->Provision->getConfig("cacheTime") === 0)? $this->Provision->getConfig("cacheTime") : DEFAULT_CACHE_TIME;
+        $this->cacheTime    = (!empty($this->provision->getConfig("cacheTime")) or $this->provision->getConfig("cacheTime") === 0)? $this->provision->getConfig("cacheTime") : DEFAULT_CACHE_TIME;
     }
 
     private function sendHeaderRequest()
     {
-        $this->Header->setHeader('Last-Modified', $this->lastModified ." GMT");
-        $this->Header->setHeader('ETag', $this->ETag);
-        $this->Header->setHeader('Cache-Control', 'max-age='.$this->cacheTime);
+        $this->header->setHeader('Last-Modified', $this->lastModified ." GMT");
+        $this->header->setHeader('ETag', $this->ETag);
+        $this->header->setHeader('Cache-Control', 'max-age='.$this->cacheTime);
 
-        $DoIDsMatch = (isset($_SERVER['HTTP_IF_NONE_MATCH']) and
-    preg_match("/" . $this->ETag . "/", $_SERVER['HTTP_IF_NONE_MATCH']));
+        $DoIDsMatch = (isset($_SERVER['HTTP_IF_NONE_MATCH']) and preg_match("/" . $this->ETag . "/", $_SERVER['HTTP_IF_NONE_MATCH']));
 
         if ($DoIDsMatch) {
-            $this->Header->setRawHeader('HTTP/1.1 304 Not Modified');
-            $this->Header->setRawHeader('Connection: close');
+            $this->header->setRawHeader('HTTP/1.1 304 Not Modified');
+            $this->header->setRawHeader('Connection: close');
         }
     }
 }

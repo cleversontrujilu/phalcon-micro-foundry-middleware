@@ -3,15 +3,13 @@ use Phalcon\Mvc\Controller;
 
 class ContentController extends Controller
 {
+    public function index()
+    {
+        return ['abacate' => $this->provision->getBody()];
+    }
 
-  public function index()
-  {
-	  return ['abacate' => "martoves"];
-  }
-
-  public function add()
-  {
-	  return ['abacate' => "martoves"];
-  }
-
+    public function add()
+    {
+        return ['abacate' => $this->provision->getBody()];
+    }
 }
