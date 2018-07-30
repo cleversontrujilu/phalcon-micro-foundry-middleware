@@ -34,7 +34,7 @@ $DI->setShared("forge", function () {
 /**
  * Instancia a classe de filters e adiciona filtros personalisados
  */
-$di->setShared("filter", function () {
+$DI->setShared("filter", function () {
     return Support\Filters::initialize()->getFilter();
 });
 
