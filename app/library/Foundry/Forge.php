@@ -46,7 +46,7 @@ class Forge
     {
         $this->provision    = \Phalcon\DI::getDefault()->getShared("provision");
         $this->cache        = \Phalcon\DI::getDefault()->getShared("cacheAdapter");
-        $this->view         = \Phalcon\DI::getDefault()->getShared("view");
+        //$this->view         = \Phalcon\DI::getDefault()->getShared("view");
         $this->request      = new Request();
         $this->header       = new Response();
     }

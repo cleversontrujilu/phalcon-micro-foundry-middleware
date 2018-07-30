@@ -17,16 +17,9 @@ $DI->setShared('config', function () {
 });
 
 /*
- *  Instancia o gerenciador de eventos do Phalcon
- */
-$DI->setShared("eventsManager", function() {
-    return new EventsManager();
-});
-
-/*
  * Responsável por provisionar e testar os dados da requisição
  */
-$DI->setShared("provision" , function(){
+$DI->setShared("provision", function () {
     return new Foundry\Provision();
 });
 
@@ -34,7 +27,7 @@ $DI->setShared("provision" , function(){
 /*
  * Instancia a classe Forge, responsavel por tratar e o retorno da Requisição
  */
-$DI->setShared("forge" , function(){
+$DI->setShared("forge", function () {
     return new Foundry\Forge();
 });
 
@@ -42,7 +35,7 @@ $DI->setShared("forge" , function(){
 /*
  * Instancia a classe suporte para tratamento de cache
  */
-$DI->setShared("cacheAdapter" , function(){
+$DI->setShared("cacheAdapter", function () {
     return new Support\CacheAdapter();
 });
 
@@ -50,7 +43,7 @@ $DI->setShared("cacheAdapter" , function(){
 /**
  * Events Manager
  */
-$DI->setShared("eventsManager", function() {
+$DI->setShared("eventsManager", function () {
     return new EventsManager();
 });
 
