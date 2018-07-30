@@ -60,6 +60,7 @@ $app->notFound(function () use ($app) {
 
     $app->response->setContent($message);
     $app->response->send();
+    die();
 });
 
 /**

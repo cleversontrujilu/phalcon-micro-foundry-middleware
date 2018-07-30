@@ -128,7 +128,7 @@ class Forge
             $cache->Data          = $this->Data;
             $cache->lastModified  = $this->lastModified;
             $cache->ETag          = $this->ETag;
-            $this->Cache->save($this->CacheActionName, $cache, $this->cacheTime);
+            //$this->Cache->save($this->CacheActionName, $cache, $this->cacheTime);
         }
 
         return $this;

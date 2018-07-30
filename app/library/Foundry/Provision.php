@@ -246,17 +246,9 @@ class Provision
             $this->Params[$key] = $value;
         }
 
-        if ($this->request->getMethod() == "POST" && $this->request->getContentType() !== "application/json") {
-            foreach ($this->request->getPost() as $key => $value) {
-                $this->Params[$key] = $value;
-            }
-        }
-
-        if ($this->request->getContentType() === "application/json") {
-            $raw_params = $this->request->getJsonRawBody();
-            foreach ($raw_params as $key => $value) {
-                $this->Params[$key] = $value;
-            }
+        $raw_params = $this->request->getJsonRawBody();
+        foreach ($raw_params as $key => $value) {
+            $this->Params[$key] = $value;
         }
     }
 
