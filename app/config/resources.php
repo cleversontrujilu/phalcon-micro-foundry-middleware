@@ -4,32 +4,30 @@ return new Phalcon\Config([
     '/content' => [
         'handler' => 'ContentController',
         'routes' => [
-            '/@GET'  => [
+            '/{id}@GET'  => [
                 'action' => 'index',
                 'configs' => [
                     'cacheTime' => 200
                 ]
             ],
             '/@POST' => [
-                'action' => 'add',
+                'action' => 'create',
                 'fields' => [
-                    ['field' => "corvo"    , 'name' => "Corvo"   , 'rules' => "PresenceOf"],
-                    ['field' => "cabrito"  , 'name' => "Cabrito" , 'rules' => "PresenceOf|Numericality"]
+                    ['field' => "title"        , 'name' => "Title"       , 'rules' => "PresenceOf"],
+                    ['field' => "description"  , 'name' => "Description" , 'rules' => "PresenceOf"],
+                    ['field' => "order"        , 'name' => "Order"       , 'rules' => "PresenceOf|Numericality"]
                 ],
 
             ],
             '/@PUT' => [
-                'action' => 'add',
-                'fields' => [
-                    ['field' => "corvo"    , 'name' => "Corvo"   , 'rules' => "PresenceOf"],
-                    ['field' => "cabrito"  , 'name' => "Cabrito" , 'rules' => "PresenceOf|Numericality"]
-                ],
+                'action' => 'update',
+                'fields' => [],
             ],
-            '/corvo/{id}/cabrito' => [
-                'action' => 'index',
-                'fields' => [
-                    ['field' => "corvo"    , 'name' => "Corvo"   , 'rules' => "PresenceOf"],
-                    ['field' => "cabrito"  , 'name' => "Cabrito" , 'rules' => "PresenceOf|Numericality"]
+            '/{id}/list-tags' => [
+                'action' => 'listTags',
+                'fields' => [],
+                'configs' => [
+                    'cacheTime' => 200
                 ]
             ],
         ]

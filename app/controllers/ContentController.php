@@ -5,11 +5,21 @@ class ContentController extends Controller
 {
     public function index()
     {
-        return ['abacate' => $this->provision->getBody()];
+        return ['payload' => $this->provision->getBody()];
     }
 
-    public function add()
+    public function create()
     {
-        return ['abacate' => $this->provision->getBody()];
+        return ['payload' => $this->provision->getBody()];
+    }
+
+    public function update()
+    {
+        return ['payload' => $this->provision->getBody()];
+    }
+
+    public function listTags($id)
+    {
+        return ['payload' => $this->provision->getBody() , 'id' => $id];
     }
 }
